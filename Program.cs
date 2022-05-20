@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace image_average
+namespace avg_osu_skins
 {
     public class Program
     {
@@ -9,7 +9,9 @@ namespace image_average
         [STAThread]
         static void Main(string[] args)
         {
-            form.RunForm(args[0], (args.Count() > 1 ? bool.Parse(args[1]) : true));
+            form.RunForm();
+            Application.Run(form);
         }
     }
 }
+
