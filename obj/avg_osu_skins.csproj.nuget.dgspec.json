@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "F:\\Code\\avg_osu_skins\\avg_osu_skins.csproj": {}
+    "C:\\Users\\zbeyer\\Documents\\GitHub\\Average_osu_Skins\\avg_osu_skins.csproj": {}
   },
   "projects": {
-    "F:\\Code\\avg_osu_skins\\avg_osu_skins.csproj": {
+    "C:\\Users\\zbeyer\\Documents\\GitHub\\Average_osu_Skins\\avg_osu_skins.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\Code\\avg_osu_skins\\avg_osu_skins.csproj",
+        "projectUniqueName": "C:\\Users\\zbeyer\\Documents\\GitHub\\Average_osu_Skins\\avg_osu_skins.csproj",
         "projectName": "avg_osu_skins",
-        "projectPath": "F:\\Code\\avg_osu_skins\\avg_osu_skins.csproj",
-        "packagesPath": "C:\\Users\\IIIPointXIV\\.nuget\\packages\\",
-        "outputPath": "F:\\Code\\avg_osu_skins\\obj\\",
+        "projectPath": "C:\\Users\\zbeyer\\Documents\\GitHub\\Average_osu_Skins\\avg_osu_skins.csproj",
+        "packagesPath": "C:\\Users\\zbeyer\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\zbeyer\\Documents\\GitHub\\Average_osu_Skins\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\IIIPointXIV\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\zbeyer\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net6.0-windows"
@@ -43,7 +43,8 @@
             "net47",
             "net471",
             "net472",
-            "net48"
+            "net48",
+            "net481"
           ],
           "assetTargetFallback": true,
           "warn": true,
@@ -55,7 +56,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files (x86)\\dotnet\\sdk\\6.0.101\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files (x86)\\dotnet\\sdk\\6.0.402\\RuntimeIdentifierGraph.json"
         }
       }
     }

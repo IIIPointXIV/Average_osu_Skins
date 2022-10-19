@@ -1,3 +1,4 @@
+using System.Security.AccessControl;
 using System.Reflection;
 using System.Linq;
 using System.Diagnostics;
@@ -25,7 +26,7 @@ public class DirectBitmap : IDisposable
         Bitmap = new Bitmap(width, height, width * 4, PixelFormat.Format32bppPArgb, BitsHandle.AddrOfPinnedObject());
     }
 
-/*     public void SetNewBitmap(Bitmap image)
+     /*public void SetNewBitmap(Bitmap image)
     {
         Width = image.Width;
         Height = image.Height;
@@ -59,9 +60,10 @@ public class DirectBitmap : IDisposable
         BitsHandle.Free();
     }
 }
+
 public class Form1 : Form
 {
-    enum NumberName
+    enum NumberNames
     {
         HitCirclePrefix,
         ScorePrefix,
@@ -382,7 +384,8 @@ public class Form1 : Form
         {
             Font = mainFont,
             Left = -12,
-            Text = (File.Exists(Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!", "skins", "!!Most Average Skin", "skin.ini")) ? mainFolderDi.GetDirectories().Count() : mainFolderDi.GetDirectories().Count()-1) + " total skins found.",
+            Text = (File.Exists(Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!", "skins", "!!Most Average Skin", "skin.ini"))
+                    ? mainFolderDi.GetDirectories().Count() : mainFolderDi.GetDirectories().Count()-1) + " total skins found.",
             Width = 172,
         };
         Controls.Add(textBox);
@@ -576,10 +579,10 @@ public class Form1 : Form
                             continue;
                         }
 
-                        if(Enum.TryParse(typeof(NumberName), lineArray[0], true, out object temp)) //if line contains the prefix of a font file
+                        if(Enum.TryParse(typeof(NumberName), lineArray[0], true, out object temp)) //if line contains the prefix of a font files
                         {
                             string prefix = lineArray[1].Replace(" ", ""); //the prefix of the files
-                            NumberName name = (NumberName)temp;
+                            NumberName name = (NumberName)temp;s
                             foreach(FileInfo nowFile in currentSkinFolder.GetFiles())
                             {
                                 if(nowFile.FullName.Contains(prefix+"-", StringComparison.OrdinalIgnoreCase))
@@ -595,15 +598,15 @@ public class Form1 : Form
                                     }
 
                                     DirectBitmap img = ConvertToDirectBitmap(Bitmap.FromFile(nowFile.FullName));
-                                    switch((NumberName)temp)
+                                    switch((NumberName)temp)s
                                     {
-                                        case NumberName.HitCirclePrefix:
+                                        case NumberName.HitCirclePrefix:s
                                             hitCircleNumbers[num].Add(img);
                                             break;
-                                        case NumberName.ComboPrefix:
+                                        case NumberName.ComboPrefix:s
                                             comboNumbers[num].Add(img);
                                             break;
-                                        case NumberName.ScorePrefix:
+                                        case NumberName.ScorePrefix:s
                                             scoreNumbers[num].Add(img);
                                             break;
                                         default:
