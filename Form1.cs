@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using System.Security.AccessControl;
 using System.Reflection;
 using System.Linq;
@@ -79,12 +80,15 @@ public class Form1 : Form
     List<int> widthOffset = new List<int>();
     List<int> heightOffset = new List<int>();
     bool AvgOnlyExistingPixels = false;
+    int threadCount = 8;
     DirectoryInfo mainFolderDi;
-    CheckBox textBox;
-    CheckBox workingTextBox;
-    CheckBox cursorTrail;
-    CheckBox percentageTextBox;
+        CheckBox textBox;
+        CheckBox workingTextBox;
+        CheckBox cursorTrail;
+        CheckBox percentageTextBox;
     Button makeAvgButton;
+    TextBox threadCountBox;
+    ToolTip toolTip;
     List<DirectBitmap> images = new List<DirectBitmap>();
     Font mainFont;
     string skinFolderPath;
@@ -386,15 +390,35 @@ public class Form1 : Form
             Left = -12,
             Text = (File.Exists(Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!", "skins", "!!Most Average Skin", "skin.ini"))
                     ? mainFolderDi.GetDirectories().Count() : mainFolderDi.GetDirectories().Count()-1) + " total skins found.",
-            Width = 172,
+            Width = 180,
         };
         Controls.Add(textBox);
+
+        threadCountBox = new TextBox()
+        {
+            Font = mainFont,
+            Left = 170,
+            Text = "14",
+            Top = 25,
+            Width = 32,
+        };
+        threadCountBox.TextChanged += (sender, ev) =>
+        {
+            if(int.TryParse(threadCountBox.Text, out int num))
+                threadCount = num;
+        };
+        threadCountBox.LostFocus += (sender, ev) =>
+        {
+            if(String.IsNullOrWhiteSpace(threadCountBox.Text))
+                threadCountBox.Text = "1";
+        };
+        Controls.Add(threadCountBox);
 
         cursorTrail = new CheckBox()
         {
             Font = mainFont,
-            Left = 160,
-            Text = "Smooth cursor trail?",
+            Left = 170,
+            Text = "Smooth cursor trail",
             Width = 300,
         };
         Controls.Add(cursorTrail);
@@ -424,8 +448,11 @@ public class Form1 : Form
             Width = 100,
             Top = 75,
         };
-
         ClearTheNumbers();
+
+        toolTip = new ToolTip();
+        toolTip.SetToolTip(threadCountBox, "The amount of threads the program will use");
+        toolTip.SetToolTip(cursorTrail, "Should the cursor trail be smooth?\nChecked means it is smooth");
     }
     
     private void ButtonClick(object thing, EventArgs e)
@@ -471,11 +498,12 @@ public class Form1 : Form
     
     private void MakeAverageImages()
     {
+        Console.WriteLine("Using " + threadCount + " threads.");
         //make static elements
         foreach(string currentSkinFileName in skinFileNames.Keys)
         {
             ClearImages();
-            if(cursorTrail.Checked && currentFileName == "cursormiddle")
+            if(cursorTrail.Checked && currentFileName.Contains("cursormiddle", StringComparison.OrdinalIgnoreCase))
                 continue;
             UpdateWorkingText("");
             string foundImage = "";
@@ -624,6 +652,7 @@ public class Form1 : Form
         {
             skinINIBool[key] = (int)MathF.Round(skinINIBool[key]/(skinINIBoolCount[key]==0? 1 : skinINIBoolCount[key]));
         }
+        skinINIBool["CursorCentre"] = 1;
 
         foreach(string key in skinINIRGB.Keys)
         {
@@ -753,15 +782,14 @@ public class Form1 : Form
         //Console.WriteLine($"Max width of {maxWidth} and max Height of {maxHeight}.");
 
         DirectBitmap finalImage = new DirectBitmap(maxWidth, maxHeight);
-        int threadsCount = 14;
         List<Task> threadList = new List<Task>();
-        int amount = (int)MathF.Floor(maxWidth/threadsCount);
-        int endingOffset = maxWidth - (amount*threadsCount);
+        int amount = (int)MathF.Floor(maxWidth/threadCount);
+        int endingOffset = maxWidth - (amount*threadCount);
 
-        for(int i = 0; i<threadsCount; i++)
+        for(int i = 0; i<threadCount; i++)
         {
             int startX = i*amount;
-            int endX = (i+1)*amount + ((i+1)==threadsCount ? endingOffset :0)-1;
+            int endX = (i+1)*amount + ((i+1)==threadCount ? endingOffset :0)-1;
             threadList.Add(Task.Factory.StartNew(()=>RunByThread(finalImage, startX, endX)));
         }
         Task.WaitAll(threadList.ToArray());
