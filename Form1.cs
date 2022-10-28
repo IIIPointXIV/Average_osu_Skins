@@ -579,10 +579,10 @@ public class Form1 : Form
                             continue;
                         }
 
-                        if(Enum.TryParse(typeof(NumberName), lineArray[0], true, out object temp)) //if line contains the prefix of a font files
+                        if(Enum.TryParse(typeof(NumberNames), lineArray[0], true, out object temp)) //if line contains the prefix of a font files
                         {
                             string prefix = lineArray[1].Replace(" ", ""); //the prefix of the files
-                            NumberName name = (NumberName)temp;s
+                            NumberNames name = (NumberNames)temp;
                             foreach(FileInfo nowFile in currentSkinFolder.GetFiles())
                             {
                                 if(nowFile.FullName.Contains(prefix+"-", StringComparison.OrdinalIgnoreCase))
@@ -598,15 +598,15 @@ public class Form1 : Form
                                     }
 
                                     DirectBitmap img = ConvertToDirectBitmap(Bitmap.FromFile(nowFile.FullName));
-                                    switch((NumberName)temp)s
+                                    switch((NumberNames)temp)
                                     {
-                                        case NumberName.HitCirclePrefix:s
+                                        case NumberNames.HitCirclePrefix:
                                             hitCircleNumbers[num].Add(img);
                                             break;
-                                        case NumberName.ComboPrefix:s
+                                        case NumberNames.ComboPrefix:
                                             comboNumbers[num].Add(img);
                                             break;
-                                        case NumberName.ScorePrefix:s
+                                        case NumberNames.ScorePrefix:
                                             scoreNumbers[num].Add(img);
                                             break;
                                         default:
