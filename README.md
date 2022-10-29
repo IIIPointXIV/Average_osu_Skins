@@ -12,12 +12,12 @@
 - Sometimes the finished skin is just broken! So much fun!
 
 # How to use
-1. Download and unzip the latest release.
+1. Download and unzip the latest [release](https://github.com/IIIPointXIV/Average_osu_Skins/releases).
 2. Launch the .exe
 3. It should get the location of osu automatically. If it doesn't let me know.
 4. Set how many threads it will use (I recommend one less than the amount you have)
 5. Set any other settings
-6. Click the "Make Avberage Skin" button!
+6. Click the "Make Average Skin" button!
 7. Wait 7 years for it to finish! It will update you along the way
 
 <br>
