@@ -117,7 +117,7 @@ public class Form1 : Form
         {"button-left", "TopRight"},
         {"button-right", "TopLeft"},
         {"button-middle", "Top"},
-        {"menu-back-0", "BottomLeft"},
+        //{"menu-back-0", "BottomLeft"},
         {"menu-back", "BottomLeft"},
         {"mode-osu", "Centre"},
         {"mode-taiko", "Centre"},
@@ -208,7 +208,7 @@ public class Form1 : Form
         {"comboburst", "BottomLeft"},
         {"comboburst-mania", "BottomLeft"},
         {"comboburst-fruits", "BottomLeft"},
-        {"play-skip-0", "BottomRight"},
+        //{"play-skip-0", "BottomRight"},
         {"play-skip", "BottomRight"},
         {"menu-button-background", "Left"},
         {"play-unranked", "Centre"},
@@ -523,22 +523,22 @@ public class Form1 : Form
 
                 foreach(FileInfo file in currentSkinFolder.GetFiles())
                 {
-                    string currentName = file.Name;
-                    if(currentName.Contains("play-skip"))
+                    //string currentName = file.Name;
+                    /* if(currentName.Contains("play-skip", StringComparison.OrdinalIgnoreCase))
                         currentName.Replace("play-skip", "play-skip-0");
-                    else if(currentName.Contains("menu-back"))
-                        currentName.Replace("menu-back", "menu-back-0");
+                    else if(currentName.Contains("menu-back", StringComparison.OrdinalIgnoreCase))
+                        currentName.Replace("menu-back", "menu-back-0"); */
 
-                    if(!currentName.Contains("png"))
+                    if(!file.Name.Contains("png"))
                         continue;
                     
-                    if(string.Equals(currentSkinFileName+"@2x.png", currentName, StringComparison.OrdinalIgnoreCase))
+                    if(CheckIfIsSkin(currentSkinFileName, file.Name, true))
                     {
                         images.Add(ConvertToDirectBitmap(Bitmap.FromFile(file.FullName)));
                         sdFound = false;
                         break;
                     }
-                    else if(string.Equals(currentSkinFileName+".png", currentName, StringComparison.OrdinalIgnoreCase))
+                    else if(CheckIfIsSkin(currentSkinFileName, file.Name, false))
                     {
                         foundImage = file.FullName;
                         sdFound = true;
@@ -553,6 +553,16 @@ public class Form1 : Form
             MakeAverageImg(Path.Combine(skinFolderPath, "!!Most Average Skin", currentSkinFileName + "@2x.png"));
             ClearImages();
         }
+    }
+
+    private bool CheckIfIsSkin(string currentSkinFileName, string currentName, bool at2x)
+    {
+        if(currentSkinFileName.Contains("play-skip", StringComparison.OrdinalIgnoreCase) && currentName.Contains("play-skip", StringComparison.OrdinalIgnoreCase))
+            return (currentName.Contains("@2x") && at2x) || !(currentName.Contains("@2x") && at2x);
+        else if(currentSkinFileName.Contains("menu-back", StringComparison.OrdinalIgnoreCase) && currentName.Contains("menu-back", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return string.Equals(currentSkinFileName + (at2x ? "@2x" : "") + ".png", currentName, StringComparison.OrdinalIgnoreCase);
     }
 
     private void MakeAverageSkinINI()
