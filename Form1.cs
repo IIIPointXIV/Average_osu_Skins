@@ -381,6 +381,11 @@ public class Form1 : Form
         this.Text = "Average Your osu Skins!";
         this.Size = new Size(450, 450);
 
+        if(!File.Exists(Path.Combine(Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!"), "osu!.exe")))
+        {
+            Console.WriteLine("No osu path found. Stopping.");
+            return;
+        }
         skinFolderPath = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!", "skins");
         mainFolderDi = new DirectoryInfo(skinFolderPath);
 
