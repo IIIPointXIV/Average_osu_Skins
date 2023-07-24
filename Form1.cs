@@ -560,7 +560,7 @@ public class Form1 : Form
         if(currentSkinFileName.Contains("play-skip", StringComparison.OrdinalIgnoreCase) && currentName.Contains("play-skip", StringComparison.OrdinalIgnoreCase))
             return (currentName.Contains("@2x") && at2x) || !(currentName.Contains("@2x") && at2x);
         else if(currentSkinFileName.Contains("menu-back", StringComparison.OrdinalIgnoreCase) && currentName.Contains("menu-back", StringComparison.OrdinalIgnoreCase))
-            return true;
+            return (currentName.Contains("@2x") && at2x) || !(currentName.Contains("@2x") && at2x);
 
         return string.Equals(currentSkinFileName + (at2x ? "@2x" : "") + ".png", currentName, StringComparison.OrdinalIgnoreCase);
     }
