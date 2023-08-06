@@ -471,6 +471,7 @@ public class Form1 : Form
 
     private void UpdateWorkingText(string text)
     {
+        return;
         if(string.IsNullOrWhiteSpace(text))
         {
             List<string> thing = new List<string>(skinFileNames.Keys);
