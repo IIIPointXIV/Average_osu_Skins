@@ -1,13 +1,10 @@
-using System.Net.Mime;
-using System.Security.AccessControl;
-using System.Reflection;
-using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Drawing.Imaging;
 
+namespace avg_osu_skins;
 public class DirectBitmap : IDisposable
 {
     public Bitmap Bitmap { get; private set; }
@@ -27,14 +24,14 @@ public class DirectBitmap : IDisposable
         Bitmap = new Bitmap(width, height, width * 4, PixelFormat.Format32bppPArgb, BitsHandle.AddrOfPinnedObject());
     }
 
-     /*public void SetNewBitmap(Bitmap image)
-    {
-        Width = image.Width;
-        Height = image.Height;
-        Bits = new Int32[Width * Height];
-        BitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
-        Bitmap = new Bitmap(Width, Height, Width*4, PixelFormat.Format32bppPArgb, BitsHandle.AddrOfPinnedObject());
-    } */
+    /*public void SetNewBitmap(Bitmap image)
+   {
+       Width = image.Width;
+       Height = image.Height;
+       Bits = new Int32[Width * Height];
+       BitsHandle = GCHandle.Alloc(Bits, GCHandleType.Pinned);
+       Bitmap = new Bitmap(Width, Height, Width*4, PixelFormat.Format32bppPArgb, BitsHandle.AddrOfPinnedObject());
+   } */
 
     public void SetPixel(int x, int y, Color colour)
     {
@@ -59,6 +56,7 @@ public class DirectBitmap : IDisposable
         Disposed = true;
         Bitmap.Dispose();
         BitsHandle.Free();
+        GC.SuppressFinalize(this);
     }
 }
 
@@ -77,23 +75,23 @@ public class Form1 : Form
         percent,
         x,
     }
-    List<int> widthOffset = new List<int>();
-    List<int> heightOffset = new List<int>();
+    readonly List<int> widthOffset = new();
+    readonly List<int> heightOffset = new();
     bool avgOnlyExistingPixels = false;
     int threadCount = 8;
     DirectoryInfo mainFolderDi;
-        CheckBox textBox;
-        CheckBox workingTextBox;
-        CheckBox cursorTrail;
-        CheckBox percentageTextBox;
+    CheckBox textBox;
+    CheckBox workingTextBox;
+    CheckBox cursorTrail;
+    CheckBox percentageTextBox;
     Button makeAvgButton;
     TextBox threadCountBox;
     ToolTip toolTip;
-    List<DirectBitmap> images = new List<DirectBitmap>();
+    List<DirectBitmap> images = new();
     Font mainFont;
     string skinFolderPath;
     string currentFileName;
-    Dictionary<string, string> skinFileNames = new Dictionary<string, string>() //the names of all of the skin files that may exist. second string is the offset that osu uses when displaying it
+    readonly Dictionary<string, string> skinFileNames = new() //the names of all of the skin files that may exist. second string is the offset that osu uses when displaying it
     {
         {"welcome_text", "Centre"},
         {"menu-snow", "Centre"},
@@ -329,7 +327,7 @@ public class Form1 : Form
         {"targetoverlay-pt-4", "Centre"},
         {"targetoverlay-pt-5", "Centre"},
     };
-    Dictionary<string, int> skinINIBool = new Dictionary<string, int>()
+    readonly Dictionary<string, int> skinINIBool = new()
     {
         {"CursorExpand", 0},
         {"CursorCentre", 0},
@@ -345,7 +343,7 @@ public class Form1 : Form
         {"SpinnerFadePlayfield", 0},
         {"SpinnerFrequencyModulate", 0},
     };
-    Dictionary<string, string> skinINIRGB = new Dictionary<string, string>()
+    readonly Dictionary<string, string> skinINIRGB = new()
     {
         {"SongSelectActiveText", "0,0,0"},
         {"SongSelectInactiveText", "0,0,0"},
@@ -369,9 +367,9 @@ public class Form1 : Form
         {"HyperDashAfterImage", "0,0,0"},
     };
     //Stopwatch averageCurrentImageTime = new Stopwatch();
-    List<List<DirectBitmap>> hitCircleNumbers = new List<List<DirectBitmap>>();
-    List<List<DirectBitmap>> scoreNumbers = new List<List<DirectBitmap>>();
-    List<List<DirectBitmap>> comboNumbers = new List<List<DirectBitmap>>();
+    readonly List<List<DirectBitmap>> hitCircleNumbers = new();
+    readonly List<List<DirectBitmap>> scoreNumbers = new();
+    readonly List<List<DirectBitmap>> comboNumbers = new();
     public void RunForm()
     {
         mainFont = new Font("Segoe UI", 12);
@@ -381,7 +379,7 @@ public class Form1 : Form
         this.Text = "Average Your osu Skins!";
         this.Size = new Size(450, 450);
 
-        if(!File.Exists(Path.Combine(Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!"), "osu!.exe")))
+        if (!File.Exists(Path.Combine(Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!"), "osu!.exe")))
         {
             Console.WriteLine("No osu path found. Stopping.");
             return;
@@ -394,7 +392,7 @@ public class Form1 : Form
             Font = mainFont,
             Left = -12,
             Text = (File.Exists(Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!", "skins", "!!Most Average Skin", "skin.ini"))
-                    ? mainFolderDi.GetDirectories().Count() : mainFolderDi.GetDirectories().Count()-1) + " total skins found.",
+                    ? mainFolderDi.GetDirectories().Length : mainFolderDi.GetDirectories().Length - 1) + " total skins found.",
             Width = 180,
         };
         Controls.Add(textBox);
@@ -409,12 +407,12 @@ public class Form1 : Form
         };
         threadCountBox.TextChanged += (sender, ev) =>
         {
-            if(int.TryParse(threadCountBox.Text, out int num))
+            if (int.TryParse(threadCountBox.Text, out int num))
                 threadCount = num;
         };
         threadCountBox.LostFocus += (sender, ev) =>
         {
-            if(String.IsNullOrWhiteSpace(threadCountBox.Text))
+            if (string.IsNullOrWhiteSpace(threadCountBox.Text))
                 threadCountBox.Text = "1";
         };
         Controls.Add(threadCountBox);
@@ -460,41 +458,46 @@ public class Form1 : Form
         toolTip.SetToolTip(threadCountBox, "The amount of threads the program will use");
         toolTip.SetToolTip(cursorTrail, "Should the cursor trail be smooth?\nChecked means it is smooth.\nIt is recommended to leave this off.");
     }
-    
+
     private void ButtonClick(object thing, EventArgs e)
     {
         Controls.Add(workingTextBox);
         Controls.Add(percentageTextBox);
         UpdateWorkingText("Starting Up...");
-        Task.Factory.StartNew(() => MakeAverageSkin());
+        MakeAverageSkin();
     }
 
     private void UpdateWorkingText(string text)
     {
-        return;
-        if(string.IsNullOrWhiteSpace(text))
+        //return;
+        if (string.IsNullOrWhiteSpace(text))
         {
-            List<string> thing = new List<string>(skinFileNames.Keys);
-            workingTextBox.Text = $"Working on \"{skinFileNames.Keys.ElementAt(thing.IndexOf(currentFileName)+1)}\"...";
-            percentageTextBox.Text = ((int)((((float)thing.IndexOf(currentFileName)+1)/skinFileNames.Keys.Count())*100)).ToString() + "% done";
+            List<string> thing = new(skinFileNames.Keys);
+            workingTextBox.Text = $"Working on \"{skinFileNames.Keys.ElementAt(thing.IndexOf(currentFileName) + 1)}\"...";
+            percentageTextBox.Text = ((int)((((float)thing.IndexOf(currentFileName) + 1) / skinFileNames.Keys.Count) * 100)).ToString() + "% done";
         }
         else
             workingTextBox.Text = text;
     }
-    
+
+    private void UpdateTextFromThread(string text)
+    {
+        Invoke(new Action<string>(UpdateWorkingText), text);
+    }
+
     private void MakeAverageSkin()
     {
         Console.WriteLine("Using " + threadCount + " threads.");
-        Stopwatch mainTimer = new Stopwatch();
+        Stopwatch mainTimer = new();
         mainTimer.Restart();
         Directory.CreateDirectory(Path.Combine(skinFolderPath, "!!Most Average Skin"));
         ClearSkinFolder();
 
-        if(!cursorTrail.Checked)
+        if (!cursorTrail.Checked)
             skinFileNames.Remove("cursormiddle");
 
         MakeAverageImages();
-        UpdateWorkingText("Averaging the skin.ini");
+        UpdateTextFromThread("Averaging the skin.ini");
         MakeAverageSkinINI();
         /* Console.WriteLine($"Skin averaged! Took {mainTimer.ElapsedMilliseconds} ms for {mainFolderDi.GetDirectories().Count()-1} skins!");
         Console.WriteLine($"Tried to look at {pixelsTried} pixels and looked at {pixelsLookedAt} pixels");
@@ -503,26 +506,26 @@ public class Form1 : Form
 
         mainTimer.Stop();
 
-        UpdateWorkingText($"Skins averaged in {MathF.Round(mainTimer.ElapsedMilliseconds/1000)} seconds! Enjoy your new skin!");
+        UpdateTextFromThread($"Skins averaged in {MathF.Round(mainTimer.ElapsedMilliseconds / 1000)} seconds! Enjoy your new skin!");
         Controls.Remove(percentageTextBox);
     }
-    
+
     private void MakeAverageImages()
     {
         //make static elements
-        foreach(string currentSkinFileName in skinFileNames.Keys)
+        foreach (string currentSkinFileName in skinFileNames.Keys)
         {
             ClearImages();
-            if(cursorTrail.Checked && currentFileName.Contains("cursormiddle", StringComparison.OrdinalIgnoreCase))
+            if (cursorTrail.Checked && currentFileName.Contains("cursormiddle", StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            UpdateWorkingText("");
+            UpdateTextFromThread("");
             string foundImage = "";
-            foreach(DirectoryInfo currentSkinFolder in mainFolderDi.GetDirectories())
+            foreach (DirectoryInfo currentSkinFolder in mainFolderDi.GetDirectories())
             {
                 bool sdFound = false;
 
-                foreach(FileInfo file in currentSkinFolder.GetFiles())
+                foreach (FileInfo file in currentSkinFolder.GetFiles())
                 {
                     //string currentName = file.Name;
                     /* if(currentName.Contains("play-skip", StringComparison.OrdinalIgnoreCase))
@@ -530,22 +533,22 @@ public class Form1 : Form
                     else if(currentName.Contains("menu-back", StringComparison.OrdinalIgnoreCase))
                         currentName.Replace("menu-back", "menu-back-0"); */
 
-                    if(!file.Name.Contains("png"))
+                    if (!file.Name.Contains("png"))
                         continue;
-                    
-                    if(CheckIfIsSkin(currentSkinFileName, file.Name, true))
+
+                    if (CheckIfIsSkin(currentSkinFileName, file.Name, true))
                     {
                         images.Add(ConvertToDirectBitmap(Bitmap.FromFile(file.FullName)));
                         sdFound = false;
                         break;
                     }
-                    else if(CheckIfIsSkin(currentSkinFileName, file.Name, false))
+                    else if (CheckIfIsSkin(currentSkinFileName, file.Name, false))
                     {
                         foundImage = file.FullName;
                         sdFound = true;
                     }
                 }
-                if(sdFound)
+                if (sdFound)
                 {
                     images.Add(DoubleImageSize(Image.FromFile(foundImage)));
                 }
@@ -556,11 +559,11 @@ public class Form1 : Form
         }
     }
 
-    private bool CheckIfIsSkin(string currentSkinFileName, string currentName, bool at2x)
+    private static bool CheckIfIsSkin(string currentSkinFileName, string currentName, bool at2x)
     {
-        if(currentSkinFileName.Contains("play-skip", StringComparison.OrdinalIgnoreCase) && currentName.Contains("play-skip", StringComparison.OrdinalIgnoreCase))
+        if (currentSkinFileName.Contains("play-skip", StringComparison.OrdinalIgnoreCase) && currentName.Contains("play-skip", StringComparison.OrdinalIgnoreCase))
             return (currentName.Contains("@2x") && at2x) || !(currentName.Contains("@2x") && at2x);
-        else if(currentSkinFileName.Contains("menu-back", StringComparison.OrdinalIgnoreCase) && currentName.Contains("menu-back", StringComparison.OrdinalIgnoreCase))
+        else if (currentSkinFileName.Contains("menu-back", StringComparison.OrdinalIgnoreCase) && currentName.Contains("menu-back", StringComparison.OrdinalIgnoreCase))
             return (currentName.Contains("@2x") && at2x) || !(currentName.Contains("@2x") && at2x);
 
         return string.Equals(currentSkinFileName + (at2x ? "@2x" : "") + ".png", currentName, StringComparison.OrdinalIgnoreCase);
@@ -568,37 +571,37 @@ public class Form1 : Form
 
     private void MakeAverageSkinINI()
     {
-        Dictionary<string, int> skinINIBoolCount = new Dictionary<string, int>(skinINIBool);
-        Dictionary<string, int> skinINIRGBCount = new Dictionary<string, int>();
-        foreach(string key in skinINIRGB.Keys)
+        Dictionary<string, int> skinINIBoolCount = new(skinINIBool);
+        Dictionary<string, int> skinINIRGBCount = new();
+        foreach (string key in skinINIRGB.Keys)
             skinINIRGBCount.Add(key, 0);
 
-        foreach(string key in skinINIBool.Keys)
+        foreach (string key in skinINIBool.Keys)
             skinINIBool[key] = 0;
-        foreach(string key in skinINIRGB.Keys)
+        foreach (string key in skinINIRGB.Keys)
             skinINIRGB[key] = "0,0,0";
-        
-        foreach(DirectoryInfo currentSkinFolder in mainFolderDi.GetDirectories())
+
+        foreach (DirectoryInfo currentSkinFolder in mainFolderDi.GetDirectories())
         {
-            foreach(FileInfo file in currentSkinFolder.GetFiles())
+            foreach (FileInfo file in currentSkinFolder.GetFiles())
             {
-                if(file.Name != "skin.ini" || file.FullName.Contains("!!Most Average Skin"))
+                if (file.Name != "skin.ini" || file.FullName.Contains("!!Most Average Skin"))
                     continue;
-                
-                using(StreamReader currentSkinIni = new StreamReader(file.FullName))
+
+                using (StreamReader currentSkinIni = new(file.FullName))
                 {
                     string thisCurrentLine;
-                    while((thisCurrentLine = currentSkinIni.ReadLine()) != null)
+                    while ((thisCurrentLine = currentSkinIni.ReadLine()) != null)
                     {
                         string[] lineArray = thisCurrentLine.Split(':');
-                        if(skinINIBool.ContainsKey(lineArray[0]))
+                        if (skinINIBool.ContainsKey(lineArray[0]))
                         {
                             skinINIBool[lineArray[0]] += int.Parse(lineArray[1].Replace(" ", "").Remove(1));
                             skinINIBoolCount[lineArray[0]]++;
                             continue;
                         }
 
-                        if(skinINIRGB.ContainsKey(lineArray[0]))
+                        if (skinINIRGB.ContainsKey(lineArray[0]))
                         {
                             string[] colorArray = lineArray[1].Replace(" ", "").Split(',');
                             string[] currentColor = skinINIRGB[lineArray[0]].Split(',');
@@ -607,39 +610,38 @@ public class Form1 : Form
                             for (int i = 0; i < 3; i++)
                             {
                                 string num = colorArray[i];
-                                if(!int.TryParse(num, out int y))
+                                if (!int.TryParse(num, out int y))
                                 {
                                     num = num.Remove(2);
                                     num = new String(num.Where(char.IsNumber).ToArray());
                                 }
-                                
-                                newColor += (int.Parse(num)+int.Parse(currentColor[i])).ToString() + (i==2 ? "" : ",");
+
+                                newColor += (int.Parse(num) + int.Parse(currentColor[i])).ToString() + (i == 2 ? "" : ",");
                             }
                             skinINIRGB[lineArray[0]] = newColor;
                             skinINIRGBCount[lineArray[0]]++;
                             continue;
                         }
 
-                        if(Enum.TryParse(typeof(NumberNames), lineArray[0], true, out object temp)) //if line contains the prefix of a font files
+                        if (Enum.TryParse(typeof(NumberNames), lineArray[0], true, out object temp)) //if line contains the prefix of a font files
                         {
                             string prefix = lineArray[1].Replace(" ", ""); //the prefix of the files
                             NumberNames name = (NumberNames)temp;
-                            foreach(FileInfo nowFile in currentSkinFolder.GetFiles())
+                            foreach (FileInfo nowFile in currentSkinFolder.GetFiles())
                             {
-                                if(nowFile.FullName.Contains(prefix+"-", StringComparison.OrdinalIgnoreCase))
+                                if (nowFile.FullName.Contains(prefix + "-", StringComparison.OrdinalIgnoreCase))
                                 {
                                     string replaced = nowFile.Name.Replace("@2x", "").Replace(".png", "").Replace("-", "");
-                                    int num;
-                                    if(!int.TryParse(replaced.ElementAt(replaced.Count()-1).ToString(), out num))
-                                    {   
-                                        if(Enum.TryParse(typeof(ScoreNumNames), replaced.Replace(prefix, ""), true, out object val))
-                                            num = 9+(int)val;
+                                    if (!int.TryParse(replaced.ElementAt(replaced.Length - 1).ToString(), out int num))
+                                    {
+                                        if (Enum.TryParse(typeof(ScoreNumNames), replaced.Replace(prefix, ""), true, out object val))
+                                            num = 9 + (int)val;
                                         else
                                             break;
                                     }
 
                                     DirectBitmap img = ConvertToDirectBitmap(Bitmap.FromFile(nowFile.FullName));
-                                    switch((NumberNames)temp)
+                                    switch ((NumberNames)temp)
                                     {
                                         case NumberNames.HitCirclePrefix:
                                             hitCircleNumbers[num].Add(img);
@@ -661,40 +663,40 @@ public class Form1 : Form
             }
         }
 
-        foreach(string key in skinINIBool.Keys)
+        foreach (string key in skinINIBool.Keys)
         {
-            skinINIBool[key] = (int)MathF.Round(skinINIBool[key]/(skinINIBoolCount[key]==0? 1 : skinINIBoolCount[key]));
+            skinINIBool[key] = (int)MathF.Round(skinINIBool[key] / (skinINIBoolCount[key] == 0 ? 1 : skinINIBoolCount[key]));
         }
         skinINIBool["CursorCentre"] = 1;
 
-        foreach(string key in skinINIRGB.Keys)
+        foreach (string key in skinINIRGB.Keys)
         {
             string[] colorsArray = skinINIRGB[key].Split(',');
             string avgColor = "";
             for (int i = 0; i < 3; i++)
             {
-                avgColor += (int.Parse(colorsArray[i])/(skinINIRGBCount[key]==0? 1 : skinINIRGBCount[key])).ToString() + (i==2 ? "": ',');
+                avgColor += (int.Parse(colorsArray[i]) / (skinINIRGBCount[key] == 0 ? 1 : skinINIRGBCount[key])).ToString() + (i == 2 ? "" : ',');
             }
             skinINIRGB[key] = avgColor;
         }
 
         File.Copy("skin.ini", Path.Combine(skinFolderPath, "!!Most Average Skin", "skin.ini"));
-        StreamWriter mainSkinIni = new StreamWriter(Path.Combine(skinFolderPath, "!!Most Average Skin", "skin.ini"));
+        StreamWriter mainSkinIni = new(Path.Combine(skinFolderPath, "!!Most Average Skin", "skin.ini"));
         string currentLine;
-        using(StreamReader tempSkinIni = new StreamReader("skin.ini"))
+        using (StreamReader tempSkinIni = new("skin.ini"))
         {
-            while((currentLine = tempSkinIni.ReadLine()) != null)
+            while ((currentLine = tempSkinIni.ReadLine()) != null)
                 mainSkinIni.WriteLine(currentLine);
         }
 
-        foreach(string key in skinINIBool.Keys)
+        foreach (string key in skinINIBool.Keys)
         {
             mainSkinIni.WriteLine(key + ": " + skinINIBool[key]);
         }
         mainSkinIni.WriteLine("[Colours]");
-        foreach(string key in skinINIRGB.Keys)
+        foreach (string key in skinINIRGB.Keys)
         {
-            if(key == "HyperDash")
+            if (key == "HyperDash")
             {
                 mainSkinIni.WriteLine("[Fonts]");
                 mainSkinIni.WriteLine("HitCirclePrefix: default");
@@ -702,7 +704,7 @@ public class Form1 : Form
                 mainSkinIni.WriteLine("ComboPrefix: combo");
                 mainSkinIni.WriteLine("[CatchTheBeat]");
             }
-            else if(key.Contains("Combo") && skinINIRGB[key] == "0,0,0")
+            else if (key.Contains("Combo") && skinINIRGB[key] == "0,0,0")
                 continue;
             mainSkinIni.WriteLine(key + ": " + skinINIRGB[key]);
         }
@@ -712,7 +714,7 @@ public class Form1 : Form
         for (int i = 0; i <= 14; i++)
         {
             string name = i.ToString();
-            if(i<=9)
+            if (i <= 9)
             {
                 ClearImages();
                 UpdateWorkingText($"Currently working on \"default-{i}\"");
@@ -721,7 +723,7 @@ public class Form1 : Form
             }
             else
             {
-                name = ((ScoreNumNames)(i-9)).ToString();
+                name = ((ScoreNumNames)(i - 9)).ToString();
             }
             ClearImages();
 
@@ -737,49 +739,49 @@ public class Form1 : Form
         ClearTheNumbers();
         ClearImages();
     }
-    
-    private DirectBitmap DoubleImageSize(Image image)  
-    {  
-        DirectBitmap returned = new DirectBitmap(image.Width*2, image.Height*2);
-        Rectangle dub = new Rectangle(0, 0, image.Width*2, image.Height*2);
 
-        using (Graphics graphic = Graphics.FromImage(returned.Bitmap))  
-        {  
-            graphic.DrawImage(image, 0, 0, image.Width*2, image.Height*2);  
-            graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;  
-            graphic.SmoothingMode = SmoothingMode.HighQuality;  
-            graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;  
+    private static DirectBitmap DoubleImageSize(Image image)
+    {
+        DirectBitmap returned = new(image.Width * 2, image.Height * 2);
+        Rectangle dub = new(0, 0, image.Width * 2, image.Height * 2);
+
+        using (Graphics graphic = Graphics.FromImage(returned.Bitmap))
+        {
+            graphic.DrawImage(image, 0, 0, image.Width * 2, image.Height * 2);
+            graphic.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphic.SmoothingMode = SmoothingMode.HighQuality;
+            graphic.PixelOffsetMode = PixelOffsetMode.HighQuality;
             graphic.CompositingQuality = CompositingQuality.HighQuality;
             graphic.DrawImage(returned.Bitmap, dub);
-        }  
+        }
         image.Dispose();
 
-        return returned;  
-    }  
+        return returned;
+    }
 
-    private DirectBitmap ConvertToDirectBitmap(Image image)
+    private static DirectBitmap ConvertToDirectBitmap(Image image)
     {
-        DirectBitmap temp = new DirectBitmap(image.Width, image.Height);
-        Rectangle thing = new Rectangle(0, 0, image.Width, image.Height);
+        DirectBitmap temp = new(image.Width, image.Height);
+        Rectangle thing = new(0, 0, image.Width, image.Height);
 
-        using(Graphics graph = Graphics.FromImage(temp.Bitmap))
+        using (Graphics graph = Graphics.FromImage(temp.Bitmap))
             graph.DrawImage(image, thing);
-        
+
         image.Dispose();
         return temp;
     }
 
     private void MakeAverageImg(string savePath)
     {
-        if(images.Count() == 0)
+        if (images.Count == 0)
             return;
-        
+
         widthOffset.Clear();
         heightOffset.Clear();
         //averageCurrentImageTime.Restart();
         int maxImgHeight = 0;
         int maxImgWidth = 0;
-        foreach(DirectBitmap thisImage in images)
+        foreach (DirectBitmap thisImage in images)
         {
             maxImgHeight = (int)MathF.Max(thisImage.Height, maxImgHeight);
             maxImgWidth = (int)MathF.Max(thisImage.Width, maxImgWidth);
@@ -787,29 +789,29 @@ public class Form1 : Form
             //maxWidth = (maxWidth < thisImage.Width ? thisImage.Width : maxWidth);
         }
         string offsetType = skinFileNames[currentFileName];
-        foreach(DirectBitmap thisImage in images)
+        foreach (DirectBitmap thisImage in images)
         {
-            widthOffset.Add(offsetType.Contains("Left") ? 0 : (maxImgWidth-thisImage.Width)/2);
-            heightOffset.Add(offsetType.Contains("Top") ? 0 : (maxImgHeight-thisImage.Height)/(offsetType.Contains("Bottom") ? 1 : 2));
+            widthOffset.Add(offsetType.Contains("Left") ? 0 : (maxImgWidth - thisImage.Width) / 2);
+            heightOffset.Add(offsetType.Contains("Top") ? 0 : (maxImgHeight - thisImage.Height) / (offsetType.Contains("Bottom") ? 1 : 2));
         }
 
         //Console.WriteLine($"A total of {images.Count} images.");
         //Console.WriteLine($"Max width of {maxWidth} and max Height of {maxHeight}.");
 
-        DirectBitmap finalImage = new DirectBitmap(maxImgWidth, maxImgHeight);
-        List<Task> threadList = new List<Task>();
-        int amount = (int)MathF.Floor(maxImgWidth/threadCount);
-        int endingOffset = maxImgWidth - (amount*threadCount);
+        DirectBitmap finalImage = new(maxImgWidth, maxImgHeight);
+        List<Task> threadList = new();
+        int amount = (int)MathF.Floor(maxImgWidth / threadCount);
+        int endingOffset = maxImgWidth - (amount * threadCount);
 
-        for(int i = 0; i<threadCount; i++)
+        for (int i = 0; i < threadCount; i++)
         {
-            int startX = i*amount;
-            int endX = (i+1)*amount + ((i+1)==threadCount ? endingOffset :0)-1;
-            threadList.Add(Task.Factory.StartNew(()=>RunByThread(finalImage, startX, endX)));
+            int startX = i * amount;
+            int endX = (i + 1) * amount + ((i + 1) == threadCount ? endingOffset : 0) - 1;
+            threadList.Add(Task.Factory.StartNew(() => RunByThread(finalImage, startX, endX)));
         }
         Task.WaitAll(threadList.ToArray());
-        
-        foreach(Task thing in threadList)
+
+        foreach (Task thing in threadList)
             thing.Dispose();
 
         finalImage.Bitmap.Save(savePath);
@@ -833,14 +835,14 @@ public class Form1 : Form
         int origDX = dx;
         int origDY = dy;
         int countOffset = 0;
-        int colorA=0;
-        int colorR=0;
-        int colorG=0;
-        int colorB=0;
-        
+        int colorA = 0;
+        int colorR = 0;
+        int colorG = 0;
+        int colorB = 0;
+
         Color thisColor;
-        int count = images.Count();
-        for(int thisImageIndex = 0; thisImageIndex<count; thisImageIndex++)
+        int count = images.Count;
+        for (int thisImageIndex = 0; thisImageIndex < count; thisImageIndex++)
         {
             DirectBitmap image = images[thisImageIndex];
             dx = origDX;
@@ -848,16 +850,16 @@ public class Form1 : Form
 
             dx -= widthOffset[thisImageIndex];
             dy -= heightOffset[thisImageIndex];
-            if(dx<0||dy<0 || image.Height < dy+1 || image.Width < dx+1)
+            if (dx < 0 || dy < 0 || image.Height < dy + 1 || image.Width < dx + 1)
             {
-                countOffset += avgOnlyExistingPixels ? 1 : 0; 
+                countOffset += avgOnlyExistingPixels ? 1 : 0;
                 continue;
             }
-            thisColor = image.GetPixel(dx, dy); 
+            thisColor = image.GetPixel(dx, dy);
 
-            if(thisColor.A == 0)
+            if (thisColor.A == 0)
             {
-                countOffset += avgOnlyExistingPixels ? 1 : 0; 
+                countOffset += avgOnlyExistingPixels ? 1 : 0;
                 continue;
             }
             colorA += thisColor.A;
@@ -865,38 +867,38 @@ public class Form1 : Form
             colorG += thisColor.G;
             colorB += thisColor.B;
         }
-        int divisor = images.Count()==countOffset ? 1 : images.Count()-countOffset;
+        int divisor = images.Count == countOffset ? 1 : images.Count - countOffset;
 
-        return Color.FromArgb(colorA/divisor, colorR/divisor, colorG/divisor, colorB/divisor);
+        return Color.FromArgb(colorA / divisor, colorR / divisor, colorG / divisor, colorB / divisor);
     }
 
     private void ClearSkinFolder()
     {
-        DirectoryInfo di = new DirectoryInfo(Path.Combine(skinFolderPath, "!!Most Average Skin"));
-        foreach(FileInfo file in di.GetFiles())
+        DirectoryInfo di = new(Path.Combine(skinFolderPath, "!!Most Average Skin"));
+        foreach (FileInfo file in di.GetFiles())
             file.Delete();
     }
 
     private void ClearImages()
     {
-        foreach(DirectBitmap img in images)
+        foreach (DirectBitmap img in images)
             img.Dispose();
-        
+
         images.Clear();
     }
 
     private void ClearTheNumbers()
     {
-        foreach(List<DirectBitmap> imgList in hitCircleNumbers)
-            foreach(DirectBitmap img in imgList)
+        foreach (List<DirectBitmap> imgList in hitCircleNumbers)
+            foreach (DirectBitmap img in imgList)
                 img.Dispose();
-        
-        foreach(List<DirectBitmap> imgList in comboNumbers)
-            foreach(DirectBitmap img in imgList)
+
+        foreach (List<DirectBitmap> imgList in comboNumbers)
+            foreach (DirectBitmap img in imgList)
                 img.Dispose();
-        
-        foreach(List<DirectBitmap> imgList in scoreNumbers)
-            foreach(DirectBitmap img in imgList)
+
+        foreach (List<DirectBitmap> imgList in scoreNumbers)
+            foreach (DirectBitmap img in imgList)
                 img.Dispose();
 
         hitCircleNumbers.Clear();
