@@ -5,8 +5,10 @@ using System.Runtime.InteropServices;
 using System.Drawing.Imaging;
 
 namespace avg_osu_skins;
+
 public class DirectBitmap : IDisposable
 {
+    //https://stackoverflow.com/questions/24701703/c-sharp-faster-alternatives-to-setpixel-and-getpixel-for-bitmaps-for-windows-f
     public Bitmap Bitmap { get; private set; }
     public Int32[] Bits { get; private set; }
     public bool Disposed { get; private set; }
@@ -60,7 +62,7 @@ public class DirectBitmap : IDisposable
     }
 }
 
-public class Form1 : Form
+public class MainForm : Form
 {
     enum NumberNames
     {
@@ -373,11 +375,11 @@ public class Form1 : Form
     public void RunForm()
     {
         mainFont = new Font("Segoe UI", 12);
-        this.MaximizeBox = false;
-        this.FormBorderStyle = FormBorderStyle.FixedSingle;
-        this.Name = "Average Your osu Skins!";
-        this.Text = "Average Your osu Skins!";
-        this.Size = new Size(450, 450);
+        MaximizeBox = false;
+        FormBorderStyle = FormBorderStyle.FixedSingle;
+        Name = "Average Your osu Skins!";
+        Text = "Average Your osu Skins!";
+        Size = new Size(450, 450);
 
         if (!File.Exists(Path.Combine(Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), "appdata", "Local", "osu!"), "osu!.exe")))
         {
@@ -464,17 +466,16 @@ public class Form1 : Form
         Controls.Add(workingTextBox);
         Controls.Add(percentageTextBox);
         UpdateWorkingText("Starting Up...");
-        MakeAverageSkin();
+        Task.Factory.StartNew(() => MakeAverageSkin());
     }
 
     private void UpdateWorkingText(string text)
     {
-        //return;
         if (string.IsNullOrWhiteSpace(text))
         {
             List<string> thing = new(skinFileNames.Keys);
             workingTextBox.Text = $"Working on \"{skinFileNames.Keys.ElementAt(thing.IndexOf(currentFileName) + 1)}\"...";
-            percentageTextBox.Text = ((int)((((float)thing.IndexOf(currentFileName) + 1) / skinFileNames.Keys.Count) * 100)).ToString() + "% done";
+            percentageTextBox.Text = ((int)(((float)thing.IndexOf(currentFileName) + 1) / skinFileNames.Keys.Count * 100)).ToString() + "% done";
         }
         else
             workingTextBox.Text = text;
@@ -487,7 +488,7 @@ public class Form1 : Form
 
     private void MakeAverageSkin()
     {
-        Console.WriteLine("Using " + threadCount + " threads.");
+        //Console.WriteLine("Using " + threadCount + " threads.");
         Stopwatch mainTimer = new();
         mainTimer.Restart();
         Directory.CreateDirectory(Path.Combine(skinFolderPath, "!!Most Average Skin"));
@@ -499,10 +500,6 @@ public class Form1 : Form
         MakeAverageImages();
         UpdateTextFromThread("Averaging the skin.ini");
         MakeAverageSkinINI();
-        /* Console.WriteLine($"Skin averaged! Took {mainTimer.ElapsedMilliseconds} ms for {mainFolderDi.GetDirectories().Count()-1} skins!");
-        Console.WriteLine($"Tried to look at {pixelsTried} pixels and looked at {pixelsLookedAt} pixels");
-        Console.WriteLine($"Took {doubleImageTimer.ElapsedMilliseconds} ms to double image size");
-        Console.WriteLine($"Took {getPlacePixels.ElapsedMilliseconds} ms to get and place pixels"); */
 
         mainTimer.Stop();
 

@@ -5,7 +5,7 @@ namespace avg_osu_skins
 {
     public class Program
     {
-        public static Form1 form = new();
+        private static readonly MainForm form = new();
         [STAThread]
         static void Main(string[] args)
         {
